@@ -11,7 +11,7 @@ the complete communication path to any single relay.
 
 ---
 
-## 📌 Project Objectives
+##  Project Objectives
 
 - Understand and implement the **core concept of onion routing**
 - Demonstrate **layered encryption** (one layer per relay)
@@ -22,7 +22,7 @@ the complete communication path to any single relay.
 
 ---
 
-## 🧠 Core Idea (Correct Mental Model)
+##  Core Idea (Correct Mental Model)
 > Sender → Relay 1 → Relay 2 → Relay 3 → Receiver
 
 - The sender encrypts the data in **multiple layers**
@@ -36,7 +36,7 @@ This mirrors the **onion routing principle** used by Tor.
 
 ---
 
-## 🔐 What This Project Demonstrates
+##  What This Project Demonstrates
 
 | Concept | Demonstration |
 |------|--------------|
@@ -49,7 +49,7 @@ This mirrors the **onion routing principle** used by Tor.
 
 ---
 
-## ❌ What This Project Does NOT Do
+##  What This Project Does NOT Do
 
 - No Tor Browser
 - No real Tor network interaction
@@ -62,7 +62,7 @@ This is a **controlled, educational simulation**.
 
 ---
 
-## ⚙️ High-Level Workflow
+##  High-Level Workflow
 
 ### 1. Configuration
 - Fixed number of relays (default: 3)
@@ -89,7 +89,7 @@ Each relay:
 
 ---
 
-## 🧱 System Architecture
+##  System Architecture
 +--------+ +--------+ +--------+ +--------+ +----------+
 | Sender | ---> | Relay1 | ---> | Relay2 | ---> | Relay3 | ---> | Receiver |
 +--------+ +--------+ +--------+ +--------+ +----------+
@@ -98,7 +98,7 @@ Each arrow represents a TCP connection.
 
 ---
 
-## 📦 Packet Flow (Conceptual)
+##  Packet Flow (Conceptual)
 Plaintext Chunk
 ↓ encrypt with K3
 Encrypted Layer 3
@@ -111,7 +111,7 @@ Decryption happens in reverse order.
 
 ---
 
-## 📊 Visualization (Planned)
+##  Visualization (Planned)
 
 This project includes a **central visualization component** that passively observes events.
 
