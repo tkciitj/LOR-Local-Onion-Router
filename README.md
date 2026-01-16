@@ -90,9 +90,7 @@ Each relay:
 ---
 
 ##  System Architecture
-+--------+ +--------+ +--------+ +--------+ +----------+
 | Sender | ---> | Relay1 | ---> | Relay2 | ---> | Relay3 | ---> | Receiver |
-+--------+ +--------+ +--------+ +--------+ +----------+
 
 Each arrow represents a TCP connection.
 
