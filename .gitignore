@@ -1,0 +1,20 @@
+# binaries
+bin/
+*.out
+*.exe
+
+# build files
+build/
+cmake-build-*/
+
+# logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# editor configs
+.vscode/
+.idea/
