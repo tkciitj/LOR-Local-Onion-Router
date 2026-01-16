@@ -1,4 +1,4 @@
-# Tor-Inspired Onion Routing Simulator (File Transfer)
+# LOR - Local Onion Router (File Transfer)
 
 A low-level, educational implementation of **onion routing** inspired by the Tor network.  
 This project demonstrates how **layered encryption** and **multi-hop routing** can be used
