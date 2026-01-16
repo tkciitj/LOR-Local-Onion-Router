@@ -125,6 +125,33 @@ This project includes a **central visualization component** that passively obser
   "chunk_id": 4,
   "event": "layer_decrypted"
 }
+```
+## Project Structure
+```json
+{
+  src/
+ ├── sender.cpp
+ ├── relay.cpp
+ ├── receiver.cpp
 
+include/
+ ├── crypto.h
+ ├── network.h
+ ├── packet.h
 
+docs/
+media/
+logs/
+
+}
+```
+## Technologies Used
+- Language: C, C++
+- Networking: TCP sockets
+- Cryptography: Symmetric encryption (AES / custom)
+- Hashing: SHA-256 (Secured Hashing Algo)
+- Visualization: Web-based dashboard
+- OS: Linux / WSL
+
+### Always Open to suggestions and collaborations. 
 
