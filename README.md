@@ -108,6 +108,11 @@ Final Onion Packet → Relay 1
 Decryption happens in reverse order.
 
 ---
+## Build Notes (Windows)
+
+- OpenSSL is built and linked using MSYS2 MinGW64
+- Compilation from PowerShell / default MinGW may fail
+- Use MSYS2 MinGW64 terminal for crypto-related builds
 
 ##  Visualization (Planned)
 
