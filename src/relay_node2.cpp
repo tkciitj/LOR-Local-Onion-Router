@@ -14,20 +14,20 @@
 //#define XOR_KEY 0x5A
 
 //outer layer
-const uint8_t KEY_RELAY1[32] = {
-    0x10,0x21,0x32,0x43,0x54,0x65,0x76,0x87,
-    0x98,0xA9,0xBA,0xCB,0xDC,0xED,0xFE,0x0F,
-    0x1E,0x2D,0x3C,0x4B,0x5A,0x69,0x78,0x87,
-    0x96,0xA5,0xB4,0xC3,0xD2,0xE1,0xF0,0x11
-};
-
-// // middle layer
-// const uint8_t KEY_RELAY2[32] = {
-//     0x22,0x44,0x66,0x88,0xAA,0xCC,0xEE,0x00,
-//     0x11,0x33,0x55,0x77,0x99,0xBB,0xDD,0xFF,
-//     0xF1,0xE2,0xD3,0xC4,0xB5,0xA6,0x97,0x88,
-//     0x79,0x6A,0x5B,0x4C,0x3D,0x2E,0x1F,0x00
+// const uint8_t KEY_RELAY1[32] = {
+//     0x10,0x21,0x32,0x43,0x54,0x65,0x76,0x87,
+//     0x98,0xA9,0xBA,0xCB,0xDC,0xED,0xFE,0x0F,
+//     0x1E,0x2D,0x3C,0x4B,0x5A,0x69,0x78,0x87,
+//     0x96,0xA5,0xB4,0xC3,0xD2,0xE1,0xF0,0x11
 // };
+
+// middle layer
+const uint8_t KEY_RELAY2[32] = {
+    0x22,0x44,0x66,0x88,0xAA,0xCC,0xEE,0x00,
+    0x11,0x33,0x55,0x77,0x99,0xBB,0xDD,0xFF,
+    0xF1,0xE2,0xD3,0xC4,0xB5,0xA6,0x97,0x88,
+    0x79,0x6A,0x5B,0x4C,0x3D,0x2E,0x1F,0x00
+};
 
 // // innermost layer
 // const uint8_t KEY_RELAY3[32] = {
@@ -90,49 +90,49 @@ int main(){
     relayListenSocket=socket(AF_INET, SOCK_STREAM, 0);
 
     relayAddr.sin_family=AF_INET;
-    relayAddr.sin_port=htons(RELAY_PORT1);
+    relayAddr.sin_port=htons(RELAY_PORT2);
     relayAddr.sin_addr.s_addr=INADDR_ANY;
 
     //binding the socket
     bind(relayListenSocket, (struct sockaddr*)&relayAddr, sizeof(relayAddr));
     listen(relayListenSocket, 1);
-    cout<<"Relay node listening on port "<<RELAY_PORT1<<endl;
+    cout<<"Relay2 node listening on port "<<RELAY_PORT2<<endl;
 
     //accepting incoming connection from client to forward the data
     inSocket=accept(relayListenSocket, (struct sockaddr*)&clientAddr, &clientSize);
-    cout<<"Connection accepted from client "<<inet_ntoa(clientAddr.sin_addr)<<":"<<ntohs(clientAddr.sin_port)<<endl;
+    cout<<"Connection accepted from relay1 "<<inet_ntoa(clientAddr.sin_addr)<<":"<<ntohs(clientAddr.sin_port)<<endl;
 
     //creating outgoing socket to connect to server
     outSocket=socket(AF_INET, SOCK_STREAM, 0);
 
     serverAddr.sin_family=AF_INET;
-    serverAddr.sin_port=htons(RELAY_PORT2);  //htons to correclty order the bytes
+    serverAddr.sin_port=htons(RELAY_PORT3);  //htons to correclty order the bytes
     serverAddr.sin_addr.s_addr=inet_addr("127.0.0.1");
     connect(outSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)); //connect func used if relay acts as client otherwise bind if as server
-    cout<<"[RELAY1] Connected to RELAY2 on port "<<RELAY_PORT2<<"\n";
+    cout<<"[RELAY2] Connected to RELAY3 on port "<<RELAY_PORT3<<"\n";
 
     uint32_t blobSz;
     if (recv_all(inSocket, (char*)&blobSz, sizeof(blobSz)) != sizeof(blobSz)) {
-        std::cerr << "[RELAY1] Failed to receive blob size\n";
+        std::cerr << "[RELAY2] Failed to receive blob size\n";
         return 1;
     }
 
     std::vector<uint8_t> blob(blobSz);
     if (recv_all(inSocket, (char*)blob.data(), blobSz) != (int)blobSz) {
-        std::cerr << "[RELAY1] Failed to receive blob\n";
+        std::cerr << "[RELAY2] Failed to receive blob\n";
         return 1;
     }
 
     AESGCMBlock blk = deserialize_block(blob);
     std::vector<uint8_t> plaintext;
-    if (!aes_gcm_decrypt(blk, KEY_RELAY1, plaintext)) {
-        std::cerr << "[RELAY1] Auth failed. Dropping connection.\n";
+    if (!aes_gcm_decrypt(blk, KEY_RELAY2, plaintext)) {
+        std::cerr << "[RELAY2] Auth failed. Dropping connection.\n";
         closesocket(inSocket);
         closesocket(outSocket);
         return 1;
     }
 
-    std::cout << "[RELAY1] Authentication successful.\n";
+    std::cout << "[RELAY2] Authentication successful.\n";
 
     uint32_t nextBlobSz = plaintext.size();
     if (send_all(outSocket, (char*)&nextBlobSz, sizeof(nextBlobSz)) != sizeof(nextBlobSz))
@@ -142,7 +142,7 @@ int main(){
             != (int)plaintext.size())
         return 1;
 
-    std::cout << "[RELAY-1] Layer peeled & forwarded to relay-2\n";
+    std::cout << "[RELAY2] Layer peeled & forwarded to relay-3\n";
 
 
     // forwarding data between inSocket and outSocket

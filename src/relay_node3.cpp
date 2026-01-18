@@ -13,13 +13,13 @@
 #define SERVER_PORT 5000
 //#define XOR_KEY 0x5A
 
-//outer layer
-const uint8_t KEY_RELAY1[32] = {
-    0x10,0x21,0x32,0x43,0x54,0x65,0x76,0x87,
-    0x98,0xA9,0xBA,0xCB,0xDC,0xED,0xFE,0x0F,
-    0x1E,0x2D,0x3C,0x4B,0x5A,0x69,0x78,0x87,
-    0x96,0xA5,0xB4,0xC3,0xD2,0xE1,0xF0,0x11
-};
+// //outer layer
+// const uint8_t KEY_RELAY1[32] = {
+//     0x10,0x21,0x32,0x43,0x54,0x65,0x76,0x87,
+//     0x98,0xA9,0xBA,0xCB,0xDC,0xED,0xFE,0x0F,
+//     0x1E,0x2D,0x3C,0x4B,0x5A,0x69,0x78,0x87,
+//     0x96,0xA5,0xB4,0xC3,0xD2,0xE1,0xF0,0x11
+// };
 
 // // middle layer
 // const uint8_t KEY_RELAY2[32] = {
@@ -29,13 +29,13 @@ const uint8_t KEY_RELAY1[32] = {
 //     0x79,0x6A,0x5B,0x4C,0x3D,0x2E,0x1F,0x00
 // };
 
-// // innermost layer
-// const uint8_t KEY_RELAY3[32] = {
-//     0xA1,0xB2,0xC3,0xD4,0xE5,0xF6,0x07,0x18,
-//     0x29,0x3A,0x4B,0x5C,0x6D,0x7E,0x8F,0x90,
-//     0x9F,0x8E,0x7D,0x6C,0x5B,0x4A,0x39,0x28,
-//     0x17,0x06,0xF5,0xE4,0xD3,0xC2,0xB1,0xA0
-// };
+// innermost layer
+const uint8_t KEY_RELAY3[32] = {
+    0xA1,0xB2,0xC3,0xD4,0xE5,0xF6,0x07,0x18,
+    0x29,0x3A,0x4B,0x5C,0x6D,0x7E,0x8F,0x90,
+    0x9F,0x8E,0x7D,0x6C,0x5B,0x4A,0x39,0x28,
+    0x17,0x06,0xF5,0xE4,0xD3,0xC2,0xB1,0xA0
+};
 using namespace std;
 
 int send_all(SOCKET sock, const char* buf, int len) {
@@ -90,60 +90,55 @@ int main(){
     relayListenSocket=socket(AF_INET, SOCK_STREAM, 0);
 
     relayAddr.sin_family=AF_INET;
-    relayAddr.sin_port=htons(RELAY_PORT1);
+    relayAddr.sin_port=htons(RELAY_PORT3);
     relayAddr.sin_addr.s_addr=INADDR_ANY;
 
     //binding the socket
     bind(relayListenSocket, (struct sockaddr*)&relayAddr, sizeof(relayAddr));
     listen(relayListenSocket, 1);
-    cout<<"Relay node listening on port "<<RELAY_PORT1<<endl;
+    cout<<"Relay3 node listening on port "<<RELAY_PORT3<<endl;
 
     //accepting incoming connection from client to forward the data
     inSocket=accept(relayListenSocket, (struct sockaddr*)&clientAddr, &clientSize);
-    cout<<"Connection accepted from client "<<inet_ntoa(clientAddr.sin_addr)<<":"<<ntohs(clientAddr.sin_port)<<endl;
+    cout<<"Connection accepted from relay2 "<<inet_ntoa(clientAddr.sin_addr)<<":"<<ntohs(clientAddr.sin_port)<<endl;
 
     //creating outgoing socket to connect to server
     outSocket=socket(AF_INET, SOCK_STREAM, 0);
 
     serverAddr.sin_family=AF_INET;
-    serverAddr.sin_port=htons(RELAY_PORT2);  //htons to correclty order the bytes
+    serverAddr.sin_port=htons(SERVER_PORT);  //htons to correclty order the bytes
     serverAddr.sin_addr.s_addr=inet_addr("127.0.0.1");
     connect(outSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)); //connect func used if relay acts as client otherwise bind if as server
-    cout<<"[RELAY1] Connected to RELAY2 on port "<<RELAY_PORT2<<"\n";
+    cout<<"[RELAY3] Connected to SERVER on port "<<SERVER_PORT<<"\n";
 
     uint32_t blobSz;
     if (recv_all(inSocket, (char*)&blobSz, sizeof(blobSz)) != sizeof(blobSz)) {
-        std::cerr << "[RELAY1] Failed to receive blob size\n";
+        std::cerr << "[RELAY2] Failed to receive blob size\n";
         return 1;
     }
 
     std::vector<uint8_t> blob(blobSz);
     if (recv_all(inSocket, (char*)blob.data(), blobSz) != (int)blobSz) {
-        std::cerr << "[RELAY1] Failed to receive blob\n";
+        std::cerr << "[RELAY2] Failed to receive blob\n";
         return 1;
     }
 
     AESGCMBlock blk = deserialize_block(blob);
     std::vector<uint8_t> plaintext;
-    if (!aes_gcm_decrypt(blk, KEY_RELAY1, plaintext)) {
-        std::cerr << "[RELAY1] Auth failed. Dropping connection.\n";
+    if (!aes_gcm_decrypt(blk, KEY_RELAY3, plaintext)) {
+        std::cerr << "[RELAY3] Auth failed. Dropping connection.\n";
         closesocket(inSocket);
         closesocket(outSocket);
         return 1;
     }
 
-    std::cout << "[RELAY1] Authentication successful.\n";
+    std::cout << "[RELAY3] Authentication successful.\n";
 
-    uint32_t nextBlobSz = plaintext.size();
-    if (send_all(outSocket, (char*)&nextBlobSz, sizeof(nextBlobSz)) != sizeof(nextBlobSz))
-        return 1;
+    uint64_t fileSZ = plaintext.size();
+    send_all(outSocket, (char*)&fileSZ, sizeof(fileSZ));
+    send_all(outSocket, (char*)plaintext.data(), plaintext.size());
 
-    if (send_all(outSocket, (char*)plaintext.data(), plaintext.size())
-            != (int)plaintext.size())
-        return 1;
-
-    std::cout << "[RELAY-1] Layer peeled & forwarded to relay-2\n";
-
+    std::cout << "[RELAY-3] Final layer peeled & forwarded to server\n";
 
     // forwarding data between inSocket and outSocket
 //uint64_t fileSZ;
