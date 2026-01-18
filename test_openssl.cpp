@@ -1,4 +1,3 @@
-// test_openssl.cpp
 #include <openssl/evp.h>
 #include <iostream>
 

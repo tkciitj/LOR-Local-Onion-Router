@@ -1,3 +1,4 @@
+#include<cstdint>
 #include<iostream>
 #include<winsock2.h>
 #include<ws2tcpip.h>
@@ -34,7 +35,11 @@ int main(){
 
     //receive file size
     uint64_t fileSZ;
-    recv(clientSocket, (char*)&fileSZ, sizeof(fileSZ), 0); // 0 flag for no special options
+    int r = recv(clientSocket, (char*)&fileSZ, sizeof(fileSZ), 0);
+    if (r != sizeof(fileSZ)) {
+        std::cerr << "[SERVER] Failed to receive file size\n";
+        return 1;
+    }
 
     //recieve file data
     ofstream outFile("received_file", ios::binary);
@@ -43,10 +48,20 @@ int main(){
 
     while(totalReceived < fileSZ){
         int bytesReceived=recv(clientSocket, buffer, BUFFER_SIZE, 0);
+        if (bytesReceived <= 0) {
+            std::cerr << "[SERVER] Connection closed early\n";
+            break;
+        }
         outFile.write(buffer, bytesReceived);
         totalReceived+=bytesReceived;
     }  //while loop to check if all data is received and writes to file
-    cout<<"File received successfully."<<endl;
+    if (totalReceived != fileSZ) {
+        std::cerr << "[SERVER] Incomplete file received ("
+                << totalReceived << "/" << fileSZ << " bytes)\n";
+    } else {
+        std::cout << "[SERVER] File received successfully.\n";
+    }
+
 
     //closing the sockets
     outFile.close();
