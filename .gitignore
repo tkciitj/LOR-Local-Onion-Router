@@ -2,6 +2,7 @@
 bin/
 *.out
 *.exe
+received_file
 
 # build files
 build/

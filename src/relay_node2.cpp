@@ -3,6 +3,7 @@
 #include<iostream>
 //#include"../include/crypto.h"
 #include"../include/aes_gcm.h"
+#include"../include/event_logger.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -101,7 +102,7 @@ int main(){
     //accepting incoming connection from client to forward the data
     inSocket=accept(relayListenSocket, (struct sockaddr*)&clientAddr, &clientSize);
     cout<<"Connection accepted from relay1 "<<inet_ntoa(clientAddr.sin_addr)<<":"<<ntohs(clientAddr.sin_port)<<endl;
-
+    log_event("relay2", "connection_accepted", "");
     //creating outgoing socket to connect to server
     outSocket=socket(AF_INET, SOCK_STREAM, 0);
 
@@ -122,18 +123,20 @@ int main(){
         std::cerr << "[RELAY2] Failed to receive blob\n";
         return 1;
     }
-
+    log_event("relay2", "decrypt_start","");
     AESGCMBlock blk = deserialize_block(blob);
     std::vector<uint8_t> plaintext;
     if (!aes_gcm_decrypt(blk, KEY_RELAY2, plaintext)) {
         std::cerr << "[RELAY2] Auth failed. Dropping connection.\n";
+        log_event("relay2", "auth_failed", "");
         closesocket(inSocket);
         closesocket(outSocket);
         return 1;
     }
 
     std::cout << "[RELAY2] Authentication successful.\n";
-
+    log_event("relay2", "auth_success", "");
+    log_event("relay2", "forwarding_to_next", "");
     uint32_t nextBlobSz = plaintext.size();
     if (send_all(outSocket, (char*)&nextBlobSz, sizeof(nextBlobSz)) != sizeof(nextBlobSz))
         return 1;

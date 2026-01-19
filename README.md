@@ -6,7 +6,7 @@ to securely transfer files through untrusted intermediate nodes without revealin
 the complete communication path to any single relay.
 
 > ⚠️ This is **not** an implementation of the real Tor network or Tor Browser.  
-> It is a **local simulation** designed for learning systems programming,
+> It is a **local simulation** designed out of curiosity for learning systems programming,
 > networking, and applied cryptography.
 
 ---
@@ -43,7 +43,7 @@ This mirrors the **onion routing principle** used by Tor.
 | Onion Routing | Nested encryption layers |
 | Confidentiality | Relays cannot read plaintext |
 | Anonymity (conceptual) | No relay knows full route |
-| Integrity | Optional end-to-end hash verification |
+| Integrity | end-to-end tag verification |
 | Networking | TCP socket programming |
 | Systems Design | Multi-process relay architecture |
 
@@ -97,7 +97,7 @@ Each arrow represents a TCP connection.
 ---
 
 ##  Packet Flow (Conceptual)
-Plaintext Chunk
+Plaintext File
 ↓ encrypt with K3
 Encrypted Layer 3
 ↓ encrypt with K2
@@ -114,9 +114,35 @@ Decryption happens in reverse order.
 - Compilation from PowerShell / default MinGW may fail
 - Use MSYS2 MinGW64 terminal for crypto-related builds
 
-##  Visualization (Planned)
+## Compilation 
+```json
+  g++ src/client.cpp src/aes_gcm.cpp src/event_logger.cpp \
+    -Iinclude -lws2_32 -lssl -lcrypto -o client
 
-This project includes a **central visualization component** that passively observes events.
+  g++ src/relay1.cpp src/aes_gcm.cpp src/event_logger.cpp \
+    -Iinclude -lws2_32 -lssl -lcrypto -o relay1
+
+  g++ src/relay2.cpp src/aes_gcm.cpp src/event_logger.cpp \
+    -Iinclude -lws2_32 -lssl -lcrypto -o relay2
+
+  g++ src/relay3.cpp src/aes_gcm.cpp src/aes_gcm.cpp src/event_logger.cpp \
+    -Iinclude -lws2_32 -lssl -lcrypto -o relay3
+
+  g++ src/server.cpp src/event_logger.cpp \
+    -Iinclude -lws2_32 -o server
+```
+## Run Order
+```json
+  1. server
+  2. relay3
+  3. relay2
+  4. relay1
+  5. client
+```
+
+##  Visualization (Planned for future versions)
+
+This project includes a **visualization component** that passively observes events.
 
 ### Visualization principles:
 - Does NOT affect routing
@@ -153,10 +179,15 @@ logs/
 ## Technologies Used
 - Language: C, C++
 - Networking: TCP sockets
-- Cryptography: Symmetric encryption (AES / custom)
-- Hashing: SHA-256 (Secured Hashing Algo)
-- Visualization: Web-based dashboard
+- Cryptography: AES_256_GCM (Advanced Encryption Standard Galois Counter Mode for 256 bits)
+- Data Integrity: Tag verification at each peel
+- Visualization: Web-based dashboard (future versions)
 - OS: Linux / WSL
+
+## Running Demo & Screenshots
+<video controls src="LOR_demo.mp4" title="Demo"></video>
+
+![Visual](image.png)
 
 ### Always Open to suggestions and collaborations. 
 

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+    <meta charset="UTF-8">
+    <title> Local Onion Router </title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body> 
+
+<h1>Local Onion Routing – AES-GCM Visualization</h1>
+
+<div id="onion-path">
+    <div class="node" id="client">Client</div>
+    <div class="arrow">→</div>
+    <div class="node" id="relay1">Relay 1</div>
+    <div class="arrow">→</div>
+    <div class="node" id="relay2">Relay 2</div>
+    <div class="arrow">→</div>
+    <div class="node" id="relay3">Relay 3</div>
+    <div class="arrow">→</div>
+    <div class="node" id="server">Server</div>
+</div>
+
+<h2>Transfer Summary</h2>
+<div id="summary">
+    <p><b>Status:</b> <span id="status">Waiting</span></p>
+    <p><b>File Size:</b> <span id="filesize">-</span></p>
+</div>
+
+<h2>Event Log</h2>
+<div id="log"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

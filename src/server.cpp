@@ -3,6 +3,7 @@
 #include<winsock2.h>
 #include<ws2tcpip.h>
 #include<fstream>
+#include"../include/event_logger.h"
 
 using namespace std;
 
@@ -32,7 +33,7 @@ int main(){
     // accepting the connection from client
     clientSocket=accept(serverSocket, (struct sockaddr*)&clientAddr, &clientSize);
     cout<<"Connection accepted from "<<inet_ntoa(clientAddr.sin_addr)<<":"<<ntohs(clientAddr.sin_port)<<endl;
-
+    log_event("server", "connection_accepted");
     //receive file size
     uint64_t fileSZ;
     int r = recv(clientSocket, (char*)&fileSZ, sizeof(fileSZ), 0);
@@ -61,6 +62,7 @@ int main(){
     } else {
         std::cout << "[SERVER] File received successfully.\n";
     }
+    log_event("server", "file_received", std::to_string(fileSZ) + " bytes");
 
 
     //closing the sockets

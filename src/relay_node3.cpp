@@ -3,6 +3,7 @@
 #include<iostream>
 //#include"../include/crypto.h"
 #include"../include/aes_gcm.h"
+#include"../include/event_logger.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -101,6 +102,7 @@ int main(){
     //accepting incoming connection from client to forward the data
     inSocket=accept(relayListenSocket, (struct sockaddr*)&clientAddr, &clientSize);
     cout<<"Connection accepted from relay2 "<<inet_ntoa(clientAddr.sin_addr)<<":"<<ntohs(clientAddr.sin_port)<<endl;
+    log_event("relay3", "connection_accepted", "");
 
     //creating outgoing socket to connect to server
     outSocket=socket(AF_INET, SOCK_STREAM, 0);
@@ -123,17 +125,21 @@ int main(){
         return 1;
     }
 
+    log_event("relay3", "decrypt_start", "");
+
     AESGCMBlock blk = deserialize_block(blob);
     std::vector<uint8_t> plaintext;
     if (!aes_gcm_decrypt(blk, KEY_RELAY3, plaintext)) {
         std::cerr << "[RELAY3] Auth failed. Dropping connection.\n";
+        log_event("relay3", "auth_failed", "");
         closesocket(inSocket);
         closesocket(outSocket);
         return 1;
     }
 
     std::cout << "[RELAY3] Authentication successful.\n";
-
+    log_event("relay3", "auth_success", "");
+    log_event("relay3", "forwarding_to_next", "");
     uint64_t fileSZ = plaintext.size();
     send_all(outSocket, (char*)&fileSZ, sizeof(fileSZ));
     send_all(outSocket, (char*)plaintext.data(), plaintext.size());

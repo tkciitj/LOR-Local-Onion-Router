@@ -4,6 +4,7 @@
 #include<fstream>
 //#include"../include/crypto.h"
 #include"../include/aes_gcm.h"
+#include"../include/event_logger.h"
 
 using namespace std;
 
@@ -93,6 +94,7 @@ int main(){
     uint64_t fileSZ = file.tellg();
     file.seekg(0, ios::beg);
 
+    log_event("client", "file_loaded");
     //sending file size first
     //send(sock, (char*)&fileSZ, sizeof(fileSZ), 0); // 0 flag for no special options
     //sending file data
@@ -151,12 +153,13 @@ int main(){
     AESGCMBlock L1 = aes_gcm_encrypt(blob2, KEY_RELAY1);
     std::vector<uint8_t> onion = serialize_block(L1);
 
-
+    log_event("client", "onion_encryption_start");
     uint32_t onionSz = onion.size();
     send_all(sock, (char*)&onionSz, sizeof(onionSz));
     send_all(sock, (char*)onion.data(), onionSz);
 
     cout<<"Encrypted Onion sent successfully."<<endl;
+    log_event("client", "encrypted_blob_sent");
     //closing the socket and file
     file.close();
     closesocket(sock);
